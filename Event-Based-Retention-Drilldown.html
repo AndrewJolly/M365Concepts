@@ -3,279 +3,325 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Event-based retention — Date Closed interactive drill-down</title>
+<title>Event-based retention timeline — interactive drill-down</title>
 <style>
-:root{--bg:#f5f7fa;--panel:#fff;--ink:#172b3a;--muted:#546575;--line:#d9e1e8;--accent:#1266a4;--soft:#e9f3fb}
+:root{
+  --bg:#f5f7fa; --panel:#ffffff; --ink:#172b3a; --muted:#556575; --line:#d9e1e8;
+  --accent:#1266a4; --soft:#e9f3fb; --biz:#0d8b8b; --pur:#7b61a8; --evi:#c87d2a;
+  --wait:#fff2cc; --good:#e8f5e9;
+}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
-body.dark{--bg:#121b25;--panel:#1c2936;--ink:#e8eef4;--muted:#b1c1ce;--line:#3a4a59;--accent:#82c6ff;--soft:#253d51}
-header{padding:25px 30px 19px;background:var(--panel);border-bottom:1px solid var(--line)}
-.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:11px;font-weight:700;color:var(--muted)}
-h1{font-size:26px;line-height:1.2;margin:5px 0 10px;letter-spacing:-.025em}
-header p{max-width:1060px;margin:0;color:var(--muted)}
+body.dark{--bg:#121b25;--panel:#1c2936;--ink:#e8eef4;--muted:#b1c1ce;--line:#3a4a59;--accent:#82c6ff;--soft:#253d51;--wait:#4b4220;--good:#21402a}
+header{padding:24px 30px 18px;background:var(--panel);border-bottom:1px solid var(--line)}
 .topline{display:flex;justify-content:space-between;gap:20px}
-.stamp{text-align:right;font-size:12px;color:var(--muted);min-width:185px}
-button,input,select{font:inherit}
-button{cursor:pointer}
-button,select,input{border:1px solid var(--line);border-radius:6px;padding:8px 11px;background:var(--panel);color:var(--ink)}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:11px;font-weight:700;color:var(--muted)}
+h1{font-size:27px;line-height:1.2;margin:6px 0 10px;letter-spacing:-.02em}
+header p{margin:0;max-width:1040px;color:var(--muted)}
+.stamp{text-align:right;font-size:12px;color:var(--muted);min-width:190px}
+button,input{font:inherit}
+button{cursor:pointer;border:1px solid var(--line);border-radius:6px;padding:8px 11px;background:var(--panel);color:var(--ink)}
 button:hover{border-color:var(--accent);background:var(--soft)}
 button[aria-pressed=true]{background:var(--soft);border-color:var(--accent);color:var(--accent)}
 :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 a{color:var(--accent)}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:14px 30px;border-bottom:1px solid var(--line);background:var(--panel)}
-.toolbar input{width:240px}.toolbar label{font-size:12px}
-.tourbar{padding:10px 30px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.toolbar input{width:250px;border:1px solid var(--line);border-radius:6px;padding:8px 11px;background:var(--panel);color:var(--ink)}
+.toolbar label{font-size:12px}
+.tourbar{padding:10px 30px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .tourbar span{font-size:12px;color:var(--muted)}
-.work{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;padding:8px 30px 24px}
-.mapwrap{min-width:0}
-.map{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px}
-.lane{min-width:0;border-top:4px solid var(--lane)}
-.lanehead{height:98px;padding:10px 0 7px}.lanehead h2{font-size:15px;margin:3px 0}.lanehead p{font-size:12px;color:var(--muted);margin:0}
-.num{font-size:11px;font-weight:800;color:var(--lane)}
-.node{position:relative;z-index:2;display:block;text-align:left;width:100%;min-height:88px;margin:0 0 9px;border-left:3px solid var(--lane);padding:10px;background:var(--panel);transition:opacity .15s}
-.node strong{display:block;font-size:12px;line-height:1.35}
-.node small{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:5px}
-.node .tag{display:inline-block;font-size:9px;letter-spacing:.07em;text-transform:uppercase;margin:5px 0 0;color:var(--lane);font-weight:700}
-.node.dim{opacity:.28}.node.selected{outline:2px solid var(--accent);outline-offset:1px;background:var(--soft)}
-body.compact .node small{display:none}body.compact .node{min-height:57px}
-#lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible}
-#lines path{stroke:var(--accent);stroke-width:1.6;fill:none}
-.cross{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}.cross h2{font-size:15px;margin:0 0 8px}
-.crossgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
-.cross .node{--lane:#687b8b;margin:0;min-height:72px}
-.legend{font-size:11px;color:var(--muted);padding:10px 0}
-.detail{position:sticky;top:15px;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:20px;max-height:calc(100vh - 30px);overflow:auto}
-.detail h2{font-size:21px;line-height:1.25;margin:6px 0 12px}.detail h3{font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin:22px 0 5px;color:var(--muted)}
-.detail p{font-size:13px;margin:5px 0}.detail .links{display:flex;gap:5px;flex-wrap:wrap}.detail .links button{font-size:11px;padding:5px 7px;text-align:left}
-.detail ul{padding-left:17px;font-size:12px}.detail li{margin:6px 0}.tourbox{background:var(--soft);padding:12px;border-radius:6px;margin-bottom:15px}.tourbox p{font-size:12px}.tourctrl{display:flex;gap:6px;margin-top:10px}.tourctrl button{font-size:12px}
-.notice{border-left:3px solid #a27324;padding-left:12px}.foot{padding:20px 30px 30px;border-top:1px solid var(--line);background:var(--panel)}.foot p{max-width:1050px;color:var(--muted);font-size:12px}
-summary{cursor:pointer;font-weight:650}#sources{columns:2;padding-left:20px;font-size:12px}#sources li{break-inside:avoid;margin:8px 0}.empty{font-size:12px;margin-top:8px;color:var(--muted)}
-@media(min-width:1700px){.work{grid-template-columns:minmax(0,1fr) 370px}.node strong{font-size:14px}.node small{font-size:12px}.node{min-height:95px}}
-@media(max-width:1150px){.work{grid-template-columns:1fr}.detail{position:static;max-height:none;grid-row:1}.map{gap:12px}.detail .links{display:inline-flex}.lanehead{height:100px}#sources{columns:2}}
-@media(max-width:700px){header,.toolbar,.tourbar,.foot{padding-left:16px;padding-right:16px}.work{padding:8px 16px 20px}.topline{display:block}.stamp{text-align:left;margin:12px 0 0}.map{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.lanehead{height:auto;min-height:86px}.crossgrid{grid-template-columns:repeat(2,minmax(0,1fr))}#lines{display:none}#sources{columns:1}h1{font-size:23px}.toolbar input{width:100%}.node.dim{opacity:.4}}
-@media print{@page{size:A3 landscape;margin:12mm}body{background:#fff;color:#172b3a;font-size:11px}.toolbar,.tourbar,.detail,#lines,.legend{display:none!important}header{padding:0 0 12px}h1{font-size:23px}.work{display:block;padding:15px 0}.map{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}.node{min-height:68px;break-inside:avoid}.node.dim{opacity:1}.node.selected{outline:none}.node strong{font-size:11px}.node small,body.compact .node small{display:block}.cross{margin-top:10px}.crossgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;padding:12px 30px 26px}
+.main{min-width:0}
+.hero{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 18px 8px;margin-bottom:16px}
+.hero h2{margin:0 0 8px;font-size:19px}
+.hero p{margin:0 0 10px;color:var(--muted)}
+.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 6px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:10px}
+.card b{display:block;font-size:12px;margin-bottom:4px}
+.card span{font-size:12px;color:var(--muted)}
+.timeline{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;overflow-x:auto}
+.timeline-head{display:grid;grid-template-columns:180px repeat(9,minmax(150px,1fr));gap:12px;min-width:1540px;align-items:end;margin-bottom:10px}
+.phase-lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:0 0 4px}
+.stephead{padding:6px 8px;border-bottom:2px solid var(--line)}
+.stephead .num{display:block;font-size:11px;font-weight:800;color:var(--accent)}
+.stephead .ttl{display:block;font-size:12px;font-weight:700;line-height:1.25;margin-top:2px}
+.stephead .date{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+.band{display:grid;grid-template-columns:180px repeat(9,minmax(150px,1fr));gap:12px;min-width:1540px;align-items:stretch;margin-bottom:12px}
+.lanehdr{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);position:sticky;left:0;z-index:3}
+.lanehdr i{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--lane)}
+.lanehdr strong{display:block;font-size:13px}
+.lanehdr span{display:block;font-size:11px;color:var(--muted)}
+.step{position:relative;border:1px solid var(--line);border-left:4px solid var(--lane);border-radius:10px;background:var(--panel);padding:10px;min-height:106px;text-align:left}
+.step b{display:block;font-size:12px;line-height:1.3}
+.step small{display:block;margin-top:5px;color:var(--muted);font-size:11px;line-height:1.4}
+.step .tag{display:inline-block;margin-top:6px;font-size:9px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--lane)}
+.step.dim{opacity:.24}
+.step.selected{outline:2px solid var(--accent);outline-offset:1px;background:var(--soft)}
+.step.wait{background:var(--wait)}
+.step.good{background:var(--good)}
+.connector{position:absolute;left:195px;right:20px;height:3px;background:linear-gradient(to right,var(--line),var(--line));opacity:.75;pointer-events:none}
+.conn1{top:108px}.conn2{top:226px}.conn3{top:344px}
+.callout{margin-top:14px;padding:12px 14px;border-left:4px solid #a27324;background:var(--soft);border-radius:8px}
+.callout b{display:block;margin-bottom:4px}
+.detail{position:sticky;top:14px;align-self:start;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;max-height:calc(100vh - 28px);overflow:auto}
+.detail h2{font-size:22px;line-height:1.25;margin:6px 0 12px}.detail h3{font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin:22px 0 6px;color:var(--muted)}
+.detail p{font-size:13px;margin:5px 0}.detail ul{padding-left:18px;font-size:12px}.detail li{margin:6px 0}
+.detail .links{display:flex;gap:6px;flex-wrap:wrap}.detail .links button{font-size:11px;padding:5px 8px;text-align:left}
+.tourbox{background:var(--soft);padding:12px;border-radius:8px;margin-bottom:15px}.tourctrl{display:flex;gap:6px;margin-top:10px}.tourctrl button{font-size:12px}
+.legend{font-size:11px;color:var(--muted);margin-top:10px}
+.foot{padding:20px 30px 30px;border-top:1px solid var(--line);background:var(--panel)}
+.foot p{max-width:1020px;color:var(--muted);font-size:12px}
+#sources{columns:2;padding-left:20px;font-size:12px}
+#sources li{break-inside:avoid;margin:8px 0}
+.empty{font-size:12px;color:var(--muted)}
+@media(max-width:1200px){.wrap{grid-template-columns:1fr}.detail{position:static;max-height:none;grid-row:1}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){header,.toolbar,.tourbar,.foot{padding-left:16px;padding-right:16px}.wrap{padding:10px 16px 20px}.topline{display:block}.stamp{text-align:left;margin-top:12px}.summary{grid-template-columns:1fr}.toolbar input{width:100%}#sources{columns:1}}
+@media print{@page{size:A3 landscape;margin:10mm}body{background:#fff;color:#172b3a;font-size:11px}.toolbar,.tourbar,.detail{display:none!important}header{padding:0 0 10px}.wrap{display:block;padding:14px 0}.hero{border:none;padding:0 0 8px;margin:0 0 8px}.timeline{border:none;padding:0;overflow:visible}.lanehdr{position:static}.step.dim{opacity:1}.step.selected{outline:none}.foot{padding:10px 0}#sources{columns:3}}
 </style>
 </head>
 <body>
 <header>
   <div class="topline">
     <div>
-      <div class="eyebrow">Interactive architecture drill-down</div>
-      <h1>Event-based retention using Date Closed</h1>
-      <p>This interactive diagram drills into a Microsoft Purview implementation where <b>Business Classification</b> metadata drives automatic label application, while a separate <b>Date Closed</b> value is used later to start retention through periodic Purview <b>events</b>. The focus here is not on every possible retention pattern, but on how this specific operating model works in practice, what it depends on, and where the control points sit.</p>
+      <div class="eyebrow">Interactive timeline · Microsoft Purview event-based retention</div>
+      <h1>Date Closed to disposition — three-lane timeline</h1>
+      <p>A time-based explanation of the customer’s event-driven retention approach. This view shows how a record can be <b>created, classified and labelled</b> before retention actually starts, and how <b>Date Closed</b> later becomes the trigger used by Purview events to calculate the retention expiry date and move the item toward disposition review.</p>
     </div>
-    <div class="stamp">Reference view<br>Designed for solution explanation, test planning and customer discussion</div>
+    <div class="stamp">Timeline view<br>Business lane · Purview lane · Evidence lane</div>
   </div>
 </header>
-<div class="toolbar">
-  <input id="search" type="search" placeholder="Search nodes…" aria-label="Search nodes">
+<div class="toolbar" role="toolbar" aria-label="Diagram controls">
   <button id="reset">Reset</button>
-  <button id="compact" aria-pressed="false">Compact view</button>
   <button id="theme">Theme</button>
+  <button id="compact" aria-pressed="false">Titles only</button>
   <button id="print">Print</button>
+  <label for="search">Find a step</label>
+  <input type="search" id="search" placeholder="e.g. event, expiry, Date Closed">
 </div>
 <div class="tourbar">
   <span>Guided tours:</span>
-  <button data-tour="core" aria-pressed="false">Core event-based path</button>
-  <button data-tour="backfill" aria-pressed="false">Historical / late-labelled content</button>
-  <button data-tour="controls" aria-pressed="false">Operational controls</button>
+  <button data-tour="core" aria-pressed="false">Core lifecycle</button>
+  <button data-tour="waiting" aria-pressed="false">Why the waiting period matters</button>
+  <button data-tour="ops" aria-pressed="false">Operational controls</button>
 </div>
-<div class="work">
-  <div class="mapwrap">
-    <div class="map" id="map"><svg id="lines" aria-hidden="true"></svg></div>
-    <div class="legend">Tip: select any node to see the explanation, limits, inputs, outputs and direct relationships. Connected nodes stay bright while the rest dim.</div>
-    <section class="cross">
-      <h2>Cross-cutting controls and realities</h2>
-      <div class="crossgrid" id="crossgrid"></div>
+<div class="wrap">
+  <main class="main">
+    <section class="hero">
+      <h2>What this timeline is trying to make obvious</h2>
+      <p>The hardest concept in this design is that the item can already have the right label, but still <b>not yet have a retention expiry date</b>. The yellow waiting stage below highlights that gap between <b>label applied</b> and <b>event processed</b>.</p>
+      <div class="summary">
+        <div class="card"><b>Lane 1 — Business lifecycle</b><span>What the user or business process does to the item.</span></div>
+        <div class="card"><b>Lane 2 — Purview lifecycle</b><span>What the compliance platform does in response.</span></div>
+        <div class="card"><b>Lane 3 — Evidence & controls</b><span>What proves the configuration is working.</span></div>
+        <div class="card"><b>Sample dates</b><span>5 Jan 2026 to 31 Mar 2033, illustrating a seven-year retention example.</span></div>
+      </div>
     </section>
-  </div>
-  <aside class="detail" id="detail"></aside>
+
+    <section class="timeline">
+      <div class="timeline-head" id="thead"></div>
+      <div class="connector conn1"></div>
+      <div class="connector conn2"></div>
+      <div class="connector conn3"></div>
+      <div id="lanes"></div>
+      <div class="callout"><b>Important:</b> applying the event-based retention label does <u>not</u> by itself start the retention period. Retention begins when a matching Purview event processes the labelled item and calculates the expiry date from the event date.</div>
+      <div class="legend">Tip: click any step on the timeline. Related steps remain bright, and the detail panel will explain what happens, why it matters, the main dependency, and what evidence is available.</div>
+    </section>
+  </main>
+  <aside class="detail" id="detail" aria-live="polite"></aside>
 </div>
 
-<script id="data" type="application/json">{
-  "groups": [
-    ["01", "Business context & metadata", "The business meaning and searchable metadata that drive the design.", "#0d8b8b"],
-    ["02", "Label application", "How the right retention label gets onto the item.", "#1a73b8"],
-    ["03", "Date Closed & event administration", "How closure dates are translated into Purview events.", "#7b61a8"],
-    ["04", "Retention commencement", "When and how retention actually starts.", "#a2597c"],
-    ["05", "Disposition & assurance", "What happens next and how the tenant proves it is working.", "#c87d2a"],
-    ["06", "Cross-cutting", "Controls, dependencies and exception handling.", "#687b8b"]
+<script id="data" type="application/json">
+{
+  "columns": [
+    {"id":"s1","n":"01","title":"Item created","date":"5 Jan 2026"},
+    {"id":"s2","n":"02","title":"Business Classification set","date":"6 Jan 2026"},
+    {"id":"s3","n":"03","title":"Auto-apply label applied","date":"7 Jan 2026"},
+    {"id":"s4","n":"04","title":"Date Closed entered","date":"18 Mar 2026"},
+    {"id":"s5","n":"05","title":"Waiting for event","date":"18–31 Mar 2026"},
+    {"id":"s6","n":"06","title":"Monthly event created","date":"31 Mar 2026"},
+    {"id":"s7","n":"07","title":"Event processes item","date":"2 Apr 2026"},
+    {"id":"s8","n":"08","title":"Expiry calculated","date":"31 Mar 2033"},
+    {"id":"s9","n":"09","title":"Disposition review","date":"31 Mar 2033+"}
   ],
-  "nodes": [
-    {"id":"grds","g":0,"title":"GRDS authority and mapping","sub":"Schedule → classes → outcomes","does":"The organisation’s retention and disposal authority is translated into a label register. This establishes which business classes map to which retention labels, how long they are kept, and what should happen at expiry.","limit":"Purview settings implement the authority but do not replace the organisation’s policy decisions. Any approximation such as monthly event windows should be explicitly accepted as part of the operating model.","src":["overview"],"kind":"Design"},
-    {"id":"bc-column","g":0,"title":"Business Classification column","sub":"Managed metadata term set","does":"Users or business processes classify content by selecting a business classification term. This is the main trigger used to decide which retention label belongs on the item.","limit":"Not every term needs a corresponding label on day one. Unmapped terms should be understood and governed so that they do not create false assumptions about retention coverage.","src":["auto"],"kind":"Native"},
-    {"id":"search-map","g":0,"title":"Managed property mappings","sub":"RefinableString10 / 11 and refinable date","does":"The solution maps the Business Classification display value, the term ID and the Date Closed field to supported managed properties so they can be queried reliably by auto-apply policies and by event queries.","limit":"The actual managed property names matter. Search schema updates, crawl/index timing and content reindexing can affect when values become usable.","src":["auto"],"kind":"Design"},
-    {"id":"date-closed","g":0,"title":"Date Closed field","sub":"Custom close date metadata","does":"Date Closed captures when the business activity was completed or closed. In this pattern it does not itself apply the label; instead it becomes the anchor used later by Purview events to start retention.","limit":"A populated Date Closed value does not create an event on its own. It also does not calculate a retention expiry date until a matching event has processed the item.","src":["event"],"kind":"Design"},
-    {"id":"content","g":0,"title":"Content in scope","sub":"SharePoint documents, folders, document sets and supported items","does":"The model applies to the content types and locations that the customer has placed within scope for retention labels and event processing.","limit":"Tests should focus on the scoped content types rather than imply coverage for workloads or item types that were not part of the implementation.","src":["spo"],"kind":"Native"},
-
-    {"id":"label-register","g":1,"title":"Retention label register","sub":"~300 GRDS-derived event-based labels","does":"The tenant contains a broad set of retention labels derived from the disposal schedule. Many are event-based so that retention can begin from a business close date rather than from date created or label applied.","limit":"Having a label in the tenant is not the same as having a complete automation path for it. Publication, policy mapping and event administration still need to be in place.","src":["labels"],"kind":"Native"},
-    {"id":"auto-policy","g":1,"title":"Auto-apply policies","sub":"Query uses term display and term ID","does":"Auto-apply policies look for the business classification display value and term ID so that the correct label is automatically applied to content when the metadata conditions are met.","limit":"Auto-apply processing is asynchronous. Labels do not apply immediately at save time, and already-labelled items need separate consideration if classification changes later.","src":["auto"],"kind":"Native"},
-    {"id":"label-applied","g":1,"title":"Label applied to the item","sub":"Trackable, reviewable, auditable","does":"Once the policy processes, the item receives the appropriate retention label. This gives the organisation an observable governance state before retention has actually commenced.","limit":"At this point the item is labelled, but for an event-based label its retention period has still not started. The label alone is not proof that expiry has been calculated.","src":["labels"],"kind":"Native"},
-    {"id":"manual-labels","g":1,"title":"Additional published labels","sub":"Manual or disposition-time use","does":"Labels that are not used in auto-apply mappings can still be published for manual application or used later by authorised staff during remediation or disposition decisions.","limit":"Manual labelling must be governed. Tests should verify only the manual options that are actually part of the agreed operating model.","src":["publish"],"kind":"Design"},
-
-    {"id":"event-type","g":2,"title":"Purview event type","sub":"Date Closed as the retention trigger concept","does":"A Purview event type represents the business trigger used to commence retention. In this pattern the event type is aligned to Date Closed so that items are found by date-range queries and processed using a nominated event date.","limit":"The event type defines the concept, but individual events still need to be created and run. This is a deliberate administrative responsibility in the operating model.","src":["event"],"kind":"Native"},
-    {"id":"event-query","g":2,"title":"Monthly event query windows","sub":"For example: 1–31 March 2026","does":"Each event uses a query against the managed Date Closed property to target a date range. A common pattern is one event per calendar month, with the event date set to the last day of that month.","limit":"Monthly windows are an approximation. Records closed during a month all receive the same event date even if their actual closure dates differ inside that month.","src":["event"],"kind":"Design"},
-    {"id":"event-batch","g":2,"title":"Annual batch creation","sub":"Create e.g. 120 monthly events for 10 years","does":"Rather than creating events one by one, administrators can generate a set of monthly historical and current windows in bulk. This supports operational coverage over a rolling period such as the last ten years.","limit":"The chosen coverage period is a design decision. If records older than the window exist, or if content is labelled very late, additional remediation may still be required.","src":["event"],"kind":"Design"},
-    {"id":"automation","g":2,"title":"PowerShell-assisted event creation","sub":"Reduce manual administration","does":"A script or other automation can create the repeated monthly event set, reducing effort and making the process repeatable. This is particularly helpful where records managers prefer IT assistance with recurring event creation.","limit":"Automation reduces the burden but does not remove the need for governance, monitoring and evidence that the right windows were created and processed.","src":["powershell"],"kind":"Integration"},
-    {"id":"future-note","g":2,"title":"Event timing reality","sub":"Events are jobs, not continuous watchers","does":"Events process content that is labelled and discoverable when the event runs. If matching content is labelled later, a new event is still needed to pick it up, even if the item’s Date Closed falls in the same historical period.","limit":"This is one of the most important behavioural points to explain to customers. Event-based retention is powerful, but it is not a live subscription continuously watching for future items.","src":["event"],"kind":"Design"},
-
-    {"id":"retention-start","g":3,"title":"Retention commencement","sub":"Starts from the event date, not label applied","does":"When a matching event processes the labelled item, Purview calculates the retention period from the event date. This is the point at which event-based retention actually begins for the item.","limit":"Until the event has processed, there may be no calculated expiry date visible on the item even though the label appears correctly applied.","src":["event"],"kind":"Native"},
-    {"id":"expiry-date","g":3,"title":"Label expiry date calculated","sub":"Visible in compliance details","does":"After successful event processing, the item shows a calculated retention expiry date in its compliance details. This becomes one of the most useful pieces of evidence that the event-based design is working.","limit":"The timing is not instantaneous. Search indexing, auto-apply timing and event processing all affect when this becomes visible.","src":["event"],"kind":"Native"},
-    {"id":"late-labelled","g":3,"title":"Late-labelled historical record","sub":"Label arrives after an earlier matching event","does":"A record might already have a historical Date Closed value but only receive its retention label later. In that situation it will usually need a subsequent event covering the same date range so the retention period can be calculated.","limit":"This is not a defect in the label; it is an expected consequence of event processing not being continuous over future labelling activity.","src":["event"],"kind":"Design"},
-    {"id":"month-end","g":3,"title":"Month-end approximation","sub":"Event date may differ from actual close date","does":"Using the last day of a month as the event date simplifies administration and limits the number of required events while still preserving a defensible retention outcome.","limit":"This may slightly extend retention compared with calculating from the exact close date. The organisation should accept this as part of the design rationale.","src":["event"],"kind":"Design"},
-
-    {"id":"disposition","g":4,"title":"Disposition outcome","sub":"Review, delete or another configured action","does":"When the calculated expiry date is reached, the configured label behaviour determines what happens next, such as triggering a disposition review or moving toward deletion.","limit":"The test plan should verify the specific configured outcomes for representative labels rather than try to exhaustively test every possible label action.","src":["disposition"],"kind":"Native"},
-    {"id":"reviewers","g":4,"title":"Disposition reviewers and responsibilities","sub":"Who acts when retention matures?","does":"The solution still relies on assigned business or records-management roles to review and complete disposition actions where review is configured.","limit":"Reviewer assignment and decision-making are operating model concerns as much as technical configuration concerns.","src":["disposition"],"kind":"Design"},
-    {"id":"evidence","g":4,"title":"Test and audit evidence","sub":"Metadata, compliance details, event register","does":"The implementation can be evidenced through the item metadata, the applied label, compliance details showing the calculated expiry date, and the administrative record of event creation and processing.","limit":"A label being visible is only part of the story. Evidence should also show that retention started correctly and that exceptions can be detected.","src":["overview"],"kind":"Design"},
-    {"id":"remediation","g":4,"title":"Remediation path","sub":"Missed items, changed metadata, relabelling","does":"Operational remediation covers cases such as correcting Date Closed, re-running windows, manually applying a label, or otherwise dealing with items that did not enter the expected retention path first time.","limit":"Remediation needs governance. Without a defined process, administrators can fix exceptions but the customer may still lack confidence in the solution.","src":["disposition"],"kind":"Design"},
-
-    {"id":"indexing","g":5,"title":"Indexing and propagation delay","sub":"Values must be searchable first","does":"The whole pattern depends on SharePoint metadata being indexed and available through the mapped managed properties. Auto-apply and event matching both rely on that search foundation.","limit":"Tests must allow for timing delays and avoid assuming that a saved metadata change is instantly usable by Purview.","src":["auto"],"kind":"Cross-cutting"},
-    {"id":"roles","g":5,"title":"Shared responsibilities","sub":"Business, records staff and IT all participate","does":"Business users classify and close records, records managers oversee the retention model, and IT may assist with event creation automation and operational support.","limit":"If ownership is vague, the design can appear technically sound but fail operationally. It helps to show who owns each part of the control chain.","src":["overview"],"kind":"Cross-cutting"},
-    {"id":"reconcile","g":5,"title":"Reconciliation and exception detection","sub":"Find labelled items without an expiry date","does":"A practical control is to identify items that have the correct label and Date Closed value but still do not show a calculated expiry date. These can then be investigated or picked up by later events.","limit":"The exact query or detection method may vary, but some reconciliation mechanism is important whenever event creation is periodic rather than continuous.","src":["event"],"kind":"Cross-cutting"},
-    {"id":"not-all-labels","g":5,"title":"Representative testing approach","sub":"Do not test all 300 labels individually","does":"For customer assurance, a smaller number of well-chosen end-to-end tests can demonstrate the behaviour of the solution pattern. This keeps the test plan proportionate while still tracing back to the organisation’s functional requirements.","limit":"Sampling still needs to be defensible. The selected tests should cover the main variants such as auto-apply, event commencement, late-labelled items and disposition behaviour.","src":["overview"],"kind":"Cross-cutting"}
-  ],
-  "edges": [
-    ["grds","label-register","defines"],
-    ["content","bc-column","is classified by"],
-    ["content","date-closed","stores"],
-    ["bc-column","search-map","mapped to"],
-    ["date-closed","search-map","mapped to"],
-    ["search-map","auto-policy","enables queries for"],
-    ["bc-column","auto-policy","provides matching value for"],
-    ["label-register","auto-policy","supplies label set to"],
-    ["auto-policy","label-applied","applies"],
-    ["manual-labels","label-applied","can also result in"],
-    ["label-applied","event-type","becomes eligible for"],
-    ["date-closed","event-query","supplies date criteria for"],
-    ["event-type","event-query","is instantiated by"],
-    ["event-query","event-batch","organised into"],
-    ["event-batch","automation","can be generated by"],
-    ["event-batch","future-note","must respect"],
-    ["label-applied","retention-start","is prerequisite for"],
-    ["event-query","retention-start","triggers"],
-    ["future-note","late-labelled","explains"],
-    ["late-labelled","retention-start","requires later attempt at"],
-    ["retention-start","expiry-date","calculates"],
-    ["month-end","expiry-date","influences"],
-    ["event-query","month-end","often uses"],
-    ["expiry-date","disposition","drives"],
-    ["disposition","reviewers","requires"],
-    ["expiry-date","evidence","provides evidence to"],
-    ["event-batch","evidence","contributes evidence to"],
-    ["late-labelled","remediation","can lead to"],
-    ["remediation","evidence","should be recorded in"],
-    ["search-map","indexing","depends on"],
-    ["auto-policy","indexing","depends on"],
-    ["event-query","indexing","depends on"],
-    ["roles","automation","may own"],
-    ["roles","event-batch","governs"],
-    ["roles","reviewers","clarifies ownership of"],
-    ["label-applied","reconcile","is checked by"],
-    ["expiry-date","reconcile","is checked by"],
-    ["not-all-labels","evidence","shapes"],
-    ["not-all-labels","grds","samples from"],
-    ["reconcile","remediation","feeds"],
-    ["manual-labels","remediation","supports"],
-    ["label-register","manual-labels","includes"],
-    ["search-map","reconcile","supports queries for"],
-    ["grds","not-all-labels","supports"],
-    ["retention-start","disposition","progresses toward"]
+  "lanes": [
+    {
+      "id":"business","title":"Business / item lifecycle","sub":"What the business does and what happens to the record in ordinary work.","color":"#0d8b8b",
+      "steps": [
+        {"id":"b1","col":"s1","title":"Document or item is created","sub":"Content begins life in SharePoint or another in-scope location.","kind":"Business","does":"The item exists as active working content. At this stage it might not yet carry the business metadata needed to determine its retention class.","limit":"Creation alone does not imply retention classification or closure. The item is simply in existence.","evidence":["Item exists in library or list","Standard metadata visible"],"links":["b2","p1","e1"]},
+        {"id":"b2","col":"s2","title":"Business Classification selected","sub":"A managed metadata term is applied.","kind":"Business","does":"The user or business process selects the relevant Business Classification value. This is the key business instruction that tells Purview what type of record the item is.","limit":"Not every term must have an automation mapping immediately, but mapped terms must be governed and tested carefully.","evidence":["Classification field populated","Term visible in item metadata"],"links":["p2","p3","e2"]},
+        {"id":"b3","col":"s3","title":"Work continues with label now visible","sub":"The item is still active from a business point of view.","kind":"Business","does":"Once the label is applied, the item is still being used in business, but the tenant now recognises the intended retention treatment.","limit":"The label is visible, but the retention period has not yet begun for an event-based label.","evidence":["Label visible on the item","Users can see compliance status if permitted"],"links":["p4","e3"]},
+        {"id":"b4","col":"s4","title":"Date Closed is entered","sub":"The business records that activity has concluded.","kind":"Business","does":"A user or process populates the Date Closed field when the item’s business activity reaches closure. This is a separate act from classifying the item.","limit":"Populating Date Closed does not automatically create a Purview event or calculate expiry.","evidence":["Date Closed visible on item","Date stored in the designated field"],"links":["p5","p6","e4"]},
+        {"id":"b5","col":"s5","title":"Item waits in a labelled-but-not-started state","sub":"Closed in business terms, but retention not commenced.","kind":"Business","does":"The item may now be complete from a business perspective, but it is waiting for an administrative Purview event to start the retention calculation.","limit":"This waiting period is normal in this design. It is not evidence of failure unless it persists without appropriate event processing.","evidence":["Item has label and Date Closed","No calculated expiry date yet"],"links":["p7","e5"]},
+        {"id":"b6","col":"s6","title":"No direct user action","sub":"Administrative event creation happens centrally.","kind":"Business","does":"At this stage the business user may do nothing further. Records or IT administrators create the monthly event window that should capture the item.","limit":"Operational ownership must be clear so people know who creates the events.","evidence":["N/A for business user","Admin record of event creation"],"links":["p8","e6"]},
+        {"id":"b7","col":"s7","title":"Retention now effectively begins","sub":"The item enters its governed inactive phase.","kind":"Business","does":"Once the event processes the item, the retention schedule is now running in a time-bound way against the record.","limit":"The item can still be subject to other controls, but the event-based calculation is now active.","evidence":["Calculated expiry can now be seen","Compliance details updated"],"links":["p9","e7"]},
+        {"id":"b8","col":"s8","title":"Awaiting maturity","sub":"The item remains retained until the calculated expiry.","kind":"Business","does":"The item is retained in line with the configured rule until the expiry date is reached.","limit":"An expiry date becoming known does not mean the item is immediately destroyed or reviewed on that same second.","evidence":["Label expiry date displayed","Retention treatment can be explained"],"links":["p10","e8"]},
+        {"id":"b9","col":"s9","title":"Disposition review or other end action","sub":"Authorised reviewers determine the next step.","kind":"Business","does":"At maturity, the label’s configured action takes effect, such as a disposition review, deletion workflow, extension, or relabelling path.","limit":"The exact outcome depends on how the representative label is configured.","evidence":["Item appears in disposition queue","Reviewer decision recorded"],"links":["p11","e9"]}
+      ]
+    },
+    {
+      "id":"purview","title":"Purview / system lifecycle","sub":"What the platform does with metadata, labels, events and expiry.","color":"#7b61a8",
+      "steps": [
+        {"id":"p1","col":"s1","title":"Item becomes discoverable content","sub":"Search and policy scope matter from the start.","kind":"Purview","does":"The item sits within the configured locations and can later be evaluated by search-based policy mechanisms when metadata appears and indexes update.","limit":"New content is not instantly usable by all downstream retention processes.","evidence":["Location is in policy scope","Content exists in in-scope repository"],"links":["p2","e1"]},
+        {"id":"p2","col":"s2","title":"Managed property mappings become relevant","sub":"Business Classification term and term ID are queryable.","kind":"Purview","does":"The solution relies on Business Classification being mapped to managed properties such as RefinableString10 and the term ID to RefinableString11, enabling deterministic auto-apply queries.","limit":"Values must be indexed and the right managed property names must be used in policies.","evidence":["Managed property mapping documented","Search-based test query works"],"links":["p3","e2"]},
+        {"id":"p3","col":"s3","title":"Auto-apply policy matches and applies the label","sub":"The right event-based retention label is added.","kind":"Purview","does":"Purview evaluates the item against the auto-apply policy using the mapped classification metadata and applies the corresponding GRDS-derived label.","limit":"Auto-apply is asynchronous. It may take time and it does not replace an existing label automatically.","evidence":["Applied label visible","Policy simulation or status supports the match"],"links":["p4","e3"]},
+        {"id":"p4","col":"s3","title":"Item is labelled but retention has not yet started","sub":"A critical conceptual state.","kind":"Purview","does":"Because the label is event-based, Purview knows the intended retention rule, but it has not yet received the event needed to start the retention clock.","limit":"This is the most misunderstood stage. The presence of the label is not proof that expiry has been calculated.","evidence":["Label present","No label expiry date yet"],"links":["p5","p7","e5"]},
+        {"id":"p5","col":"s4","title":"Date Closed value is available for later event targeting","sub":"Mapped to a refinable date property.","kind":"Purview","does":"The Date Closed field is stored and, once indexed, becomes queryable through the chosen refinable date managed property, allowing later event windows to find the item.","limit":"The date value itself still does not create the event.","evidence":["Date property visible","Date query can find the item"],"links":["p6","e4"]},
+        {"id":"p6","col":"s5","title":"Purview is effectively waiting for an event","sub":"The platform has the label and the date, but no commencement trigger yet.","kind":"Purview","does":"This is the service-side waiting period: label is present, closure metadata exists, but the specific event job that will start retention for this range has not been created or processed yet.","limit":"Without a later event, the item can remain in this state indefinitely.","evidence":["Item is searchable by Date Closed","Expiry field still blank or absent"],"links":["p8","e5"]},
+        {"id":"p8","col":"s6","title":"Monthly event window is created","sub":"For example: 1–31 March 2026, event date 31 March 2026.","kind":"Purview","does":"An administrator creates the event instance for the relevant date range. In your design this can be done in bulk, such as 120 monthly windows over a ten-year span, assisted by PowerShell.","limit":"Events are jobs, not continuous watchers. Later-labelled items may require another event covering the same date range.","evidence":["Event record exists in Purview","Naming convention and query are documented"],"links":["p9","e6"]},
+        {"id":"p9","col":"s7","title":"Event processes the item and starts retention","sub":"Retention now runs from the event date.","kind":"Purview","does":"Purview matches the labelled item to the event using the event type and date-range query, then calculates its retention from the event date, not from the original label application date.","limit":"Processing is still asynchronous and can depend on prior indexing and label application having already completed.","evidence":["Compliance details updated","Item has calculated label expiry date"],"links":["p10","e7"]},
+        {"id":"p10","col":"s8","title":"Label expiry date is calculated","sub":"For example: 31 March 2033.","kind":"Purview","does":"The item now shows a retention expiry date based on the event date plus the configured retention period. This is one of the clearest pieces of technical evidence that the model is working.","limit":"Using month-end event dates is a deliberate approximation that may extend retention slightly compared with the exact business close date.","evidence":["Label expiry date visible","Date matches the expected calculation"],"links":["p11","e8"]},
+        {"id":"p11","col":"s9","title":"Disposition stage becomes relevant","sub":"Review or other configured action.","kind":"Purview","does":"When the item reaches the configured end of its retention period, Purview moves it into the appropriate next step, such as disposition review, deletion or another configured action.","limit":"Outcome depends on the label configuration used in the representative test scenario.","evidence":["Disposition review item appears","History and action records available"],"links":["e9"]}
+      ]
+    },
+    {
+      "id":"evidence","title":"Evidence / controls","sub":"How you prove the design works and where the control points sit.","color":"#c87d2a",
+      "steps": [
+        {"id":"e1","col":"s1","title":"Scope and location are known","sub":"The test item exists in a governed location.","kind":"Evidence","does":"The first control is simply knowing that the item sits inside the intended SharePoint site, library or other configured scope.","limit":"Testing outside the intended scope can confuse the results.","evidence":["Location documented in test","Item URL or path captured"],"links":["e2","p1"]},
+        {"id":"e2","col":"s2","title":"Classification and search evidence","sub":"Confirm the metadata is actually usable.","kind":"Evidence","does":"At this point you can prove the classification is present and, where needed, that the corresponding search managed properties are returning the expected values.","limit":"A field that looks correct on the item but is not queryable will undermine later automation.","evidence":["Metadata screenshot","Managed property test result"],"links":["e3","p2"]},
+        {"id":"e3","col":"s3","title":"Label application evidence","sub":"Show the right label is on the item.","kind":"Evidence","does":"A representative test should capture that the correct retention label has been applied based on the business classification.","limit":"This is only part of the story. It does not by itself prove event-based commencement.","evidence":["Compliance details show label","Policy result or activity evidence"],"links":["e4","p3","p4"]},
+        {"id":"e4","col":"s4","title":"Date Closed evidence","sub":"The close date is populated and searchable.","kind":"Evidence","does":"Tests should confirm that Date Closed has been stored correctly and is available for the event query mechanism.","limit":"If Date Closed is present but not mapped or not indexed, the event stage may fail silently.","evidence":["Date Closed screenshot","Query against managed date property"],"links":["e5","p5"]},
+        {"id":"e5","col":"s5","title":"Exception-detection control","sub":"Label exists but expiry date does not yet exist.","kind":"Evidence","does":"This stage is useful both as a teaching point and as an operational control. It helps explain how to identify labelled items awaiting event-based commencement.","limit":"A short waiting period is expected; a long unexplained one signals the need for reconciliation or remediation.","evidence":["Item has label and Date Closed","No expiry date shown yet"],"links":["e6","p6"]},
+        {"id":"e6","col":"s6","title":"Event administration evidence","sub":"The monthly event exists and its query is known.","kind":"Evidence","does":"A defensible design should retain evidence of event creation, such as the period covered, event name, event date, and the query targeting the Date Closed month.","limit":"If administrators cannot prove which windows were created, assurance becomes weaker.","evidence":["Event listing or screenshot","PowerShell output or admin register"],"links":["e7","p8"]},
+        {"id":"e7","col":"s7","title":"Commencement evidence","sub":"The event has actually started the retention clock.","kind":"Evidence","does":"Once the event processes the item, the test should verify that the item shows the resulting retention commencement outcome through an expiry date in compliance details.","limit":"Allow time for asynchronous processing before concluding failure.","evidence":["Compliance details show expiry date","Expected calculation confirmed"],"links":["e8","p9"]},
+        {"id":"e8","col":"s8","title":"Calculation evidence","sub":"Check the date is the one you expected.","kind":"Evidence","does":"This step proves the difference between exact Date Closed and month-end event dating. It is the point where you can demonstrate the agreed approximation logic.","limit":"If month-end approximation is not accepted, the operating model may need redesign.","evidence":["Expected vs actual expiry date","Rule explanation in test evidence"],"links":["e9","p10"]},
+        {"id":"e9","col":"s9","title":"Disposition evidence","sub":"Show the item enters the right review or end-action pathway.","kind":"Evidence","does":"Representative tests can show that the matured item appears for review or otherwise follows the configured end-of-life behaviour.","limit":"There is no need to test every label exhaustively. Choose representative scenarios aligned to the organisation’s requirements.","evidence":["Disposition review queue evidence","Reviewer action history or outcome evidence"],"links":["p11"]}
+      ]
+    }
   ],
   "tours": {
     "core": {
-      "name": "Core event-based path",
-      "nodes": ["bc-column","search-map","auto-policy","label-applied","date-closed","event-query","retention-start","expiry-date","disposition"],
-      "steps": [
-        ["bc-column","Classify the item","Business Classification is selected on the item. This tells the solution what type of record it is."],
-        ["search-map","Make it queryable","The classification and Date Closed values are mapped to managed properties so Purview can query them."],
-        ["auto-policy","Apply the label","Auto-apply policies use the classification term value and term ID to determine which label belongs on the item."],
-        ["label-applied","Separate label from retention start","The item is now labelled, but because the label is event-based, retention has not yet started."],
-        ["date-closed","Capture business closure","The Date Closed value records when the business activity finished. It becomes important later when events are created."],
-        ["event-query","Create monthly event windows","Purview events are created to find labelled items whose Date Closed values fall within a target date range."],
-        ["retention-start","Commence retention","When the matching event processes the item, retention begins from the event date."],
-        ["expiry-date","Calculate expiry","The item then shows a calculated label expiry date, which is a key piece of evidence."],
-        ["disposition","Move toward disposition","At maturity, the configured retention outcome such as review or deletion can occur."]
+      "name":"Core lifecycle",
+      "nodes":["b1","b2","p3","b4","p8","p9","p10","b9"],
+      "steps":[
+        ["b1","Item created","The content exists and starts life as ordinary business material."],
+        ["b2","Classify the item","Business Classification tells the system what kind of record it is."],
+        ["p3","Apply the event-based label","Purview auto-applies the correct label based on classification metadata."],
+        ["b4","Capture Date Closed","The business marks when the activity ended."],
+        ["p8","Create the monthly event","An administrator creates the Purview event window for the relevant Date Closed period."],
+        ["p9","Start retention","The event processes the item and starts the retention calculation from the event date."],
+        ["p10","Calculate expiry","The item now shows a calculated label expiry date."],
+        ["b9","Disposition review","At maturity, the record enters its review or end-action pathway."]
       ]
     },
-    "backfill": {
-      "name": "Historical / late-labelled content",
-      "nodes": ["date-closed","label-applied","future-note","late-labelled","event-batch","automation","reconcile","remediation"],
-      "steps": [
-        ["date-closed","Historical data may already exist","Some items already have a Date Closed value from the past."],
-        ["label-applied","The label may arrive later","An item can receive its event-based label well after that historical close date."],
-        ["future-note","Events are not watchers","A past event does not keep watching forever for future labelling activity."],
-        ["late-labelled","So a later event is needed","That historical item will usually need a subsequent event covering the same period to start retention."],
-        ["event-batch","Batch windows reduce effort","Creating a retrospective set of monthly events each year helps catch these items."],
-        ["automation","Automation makes this practical","PowerShell or similar automation reduces the manual burden of repeatedly creating the window set."],
-        ["reconcile","Check for gaps","Look for labelled items with Date Closed values but no calculated expiry date."],
-        ["remediation","Then remediate","Where needed, re-run windows or take controlled remedial action."]
+    "waiting": {
+      "name":"Why the waiting period matters",
+      "nodes":["p3","p4","b5","p6","e5","p8","p9"],
+      "steps":[
+        ["p3","The label appears","Purview has identified the correct label and applied it."],
+        ["p4","But retention is not started","Because the label is event-based, the system is still waiting for a commencement trigger."],
+        ["b5","The business thinks the item is closed","From a user perspective the record may look complete, but technically it is waiting."],
+        ["p6","Service-side waiting state","Purview has the label and the date, but still needs the event job."],
+        ["e5","A useful control point","This is how you explain or detect items that are labelled but do not yet have an expiry date."],
+        ["p8","Then the event is created","The event window is the bridge between closed content and active retention calculation."],
+        ["p9","Now retention starts","The event finally converts the labelled record into an item with an expiry date."]
       ]
     },
-    "controls": {
-      "name": "Operational controls",
-      "nodes": ["grds","label-register","event-batch","roles","reconcile","evidence","not-all-labels"],
-      "steps": [
-        ["grds","Start with authority","The design only works if the label model correctly reflects the organisation’s disposal authority."],
-        ["label-register","Know the label estate","The register explains what labels exist, which are event-based and how they trace to business classes."],
-        ["event-batch","Operate a recurring schedule","Someone must create the rolling set of monthly events on a repeatable cadence."],
-        ["roles","Assign ownership","Clarify which parts belong to business users, records managers and IT support."],
-        ["reconcile","Check what was missed","Do not rely only on event creation. Reconcile for labelled items that still lack expiry dates."],
-        ["evidence","Retain proof","Use metadata, compliance details and event records as the main evidence that the system is functioning."],
-        ["not-all-labels","Keep testing proportionate","Use a representative set of tests to prove the pattern rather than trying to test all 300 labels one by one."]
+    "ops": {
+      "name":"Operational controls",
+      "nodes":["e2","e3","e5","e6","e7","e8","e9"],
+      "steps":[
+        ["e2","Confirm classification is usable","Not just present on the item, but correctly mapped and searchable."],
+        ["e3","Confirm the right label applied","This proves the classification-to-label mapping is working."],
+        ["e5","Watch the waiting state","A short wait is normal; a prolonged one is a reconciliation concern."],
+        ["e6","Keep an event register","Be able to show which monthly windows were created and what they targeted."],
+        ["e7","Verify commencement","Use the calculated expiry date as your main proof that event-based retention started."],
+        ["e8","Check the calculation logic","This is where you explain the month-end approximation and show it is working as designed."],
+        ["e9","Keep disposition testing proportionate","Representative tests are enough to prove the pattern without testing all labels individually."]
       ]
     }
   },
   "sources": {
-    "overview": {"title":"Microsoft Purview retention labels overview","url":"https://learn.microsoft.com/microsoft-365/compliance/retention?view=o365-worldwide"},
-    "auto": {"title":"Auto-apply retention labels to content","url":"https://learn.microsoft.com/purview/auto-apply-retention-labels-scenario"},
-    "event": {"title":"Learn about retention events","url":"https://learn.microsoft.com/purview/event-driven-retention"},
-    "spo": {"title":"Retention for SharePoint and OneDrive","url":"https://learn.microsoft.com/microsoft-365/compliance/retention-policies-sharepoint?view=o365-worldwide"},
-    "labels": {"title":"Create and configure retention labels","url":"https://learn.microsoft.com/microsoft-365/compliance/create-retention-labels?view=o365-worldwide"},
-    "publish": {"title":"Publish retention labels","url":"https://learn.microsoft.com/microsoft-365/compliance/publish-retention-labels?view=o365-worldwide"},
-    "disposition": {"title":"Disposition reviews for retention labels","url":"https://learn.microsoft.com/microsoft-365/compliance/disposition?view=o365-worldwide"},
-    "powershell": {"title":"Microsoft 365 PowerShell documentation","url":"https://learn.microsoft.com/powershell/microsoft365/"}
+    "overview": {"title":"Microsoft Purview retention overview","url":"https://learn.microsoft.com/en-us/purview/retention"},
+    "auto": {"title":"Auto-apply retention labels","url":"https://learn.microsoft.com/en-us/purview/apply-retention-labels-automatically"},
+    "event": {"title":"Event-based retention","url":"https://learn.microsoft.com/en-us/purview/event-driven-retention"},
+    "settings": {"title":"Retention settings","url":"https://learn.microsoft.com/en-us/purview/retention-settings"},
+    "disposition": {"title":"Disposition in Microsoft Purview","url":"https://learn.microsoft.com/en-us/purview/disposition"},
+    "records": {"title":"Records management in Microsoft Purview","url":"https://learn.microsoft.com/en-us/purview/records-management"}
   }
-}</script>
-
-<script>
-const D=JSON.parse(document.getElementById('data').textContent), byId=Object.fromEntries(D.nodes.map(n=>[n.id,n]));
-let selected=null,tour=null,step=0;
-const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const map=document.getElementById('map'),cross=document.getElementById('crossgrid'),detail=document.getElementById('detail');
-function nodeHTML(n){return `<button class="node" id="n-${n.id}" data-node="${n.id}" aria-pressed="false"><strong>${escape(n.title)}</strong><small>${escape(n.sub)}</small>${n.kind&&n.kind!=='Native'?`<span class="tag">${escape(n.kind)}</span>`:''}</button>`}
-D.groups.slice(0,5).forEach((g,i)=>{let col=document.createElement('section');col.className='lane';col.style.setProperty('--lane',g[3]);col.innerHTML=`<div class="lanehead"><span class="num">${g[0]}</span><h2>${g[1]}</h2><p>${g[2]}</p></div>`+D.nodes.filter(n=>n.g===i).map(nodeHTML).join('');map.append(col)});
-cross.innerHTML=D.nodes.filter(n=>n.g===5).map(nodeHTML).join('');
-function linked(id){const ids=new Set([id]);D.edges.forEach(([a,b])=>{if(a===id||b===id){ids.add(a);ids.add(b)}});return ids}
-function choose(id,keepTour=false){selected=id;if(!keepTour)tour=null;document.getElementById('search').value='';render();}
-function relationHTML(es,idx){return es.map(e=>`<button data-node="${e[idx]}">${escape(byId[e[idx]].title)} <span>· ${escape(e[2])}</span></button>`).join('')||'<span class="empty">No direct relationship shown.</span>'}
-function render(){let active=tour?new Set(D.tours[tour].nodes):selected?linked(selected):null;let query=document.getElementById('search').value.toLowerCase().trim();
- document.querySelectorAll('.node').forEach(el=>{const n=byId[el.dataset.node],match=JSON.stringify(n).toLowerCase().includes(query);el.classList.toggle('dim',query?!match:active&&!active.has(n.id));el.classList.toggle('selected',n.id===selected);el.setAttribute('aria-pressed',String(n.id===selected))});
- let tourHTML='';if(tour){const t=D.tours[tour],s=t.steps[step];tourHTML=`<div class="tourbox"><div class="eyebrow">${escape(t.name)} · ${step+1}/${t.steps.length}</div><h2>${escape(s[1])}</h2><p>${escape(s[2])}</p><div class="tourctrl"><button id="prev" ${step===0?'disabled':''}>← Back</button><button id="next">${step===t.steps.length-1?'Finish':'Next →'}</button></div></div>`}
- if(selected){const n=byId[selected];detail.innerHTML=tourHTML+`<div class="eyebrow">${escape(D.groups[n.g][1])} · ${escape(n.kind||'Native')}</div><h2>${escape(n.title)}</h2><p class="notice">${escape(n.sub)}</p><h3>How it works</h3><p>${escape(n.does)}</p><h3>Limits & dependencies</h3><p>${escape(n.limit)}</p><h3>Inputs / influences</h3><div class="links">${relationHTML(D.edges.filter(e=>e[1]===n.id),0)}</div><h3>Outputs / effects</h3><div class="links">${relationHTML(D.edges.filter(e=>e[0]===n.id),1)}</div><h3>References</h3><ul>${(n.src||[]).map(k=>`<li><a href="${D.sources[k].url}" target="_blank" rel="noopener">${D.sources[k].title} ↗</a></li>`).join('')}</ul>`}
- else{detail.innerHTML=`<div class="eyebrow">Reading this view</div><h2>Event-based retention as a two-stage model</h2><p>This view intentionally separates <b>label application</b> from <b>retention commencement</b>. In your design, an item can be correctly labelled well before the retention period has started.</p><h3>Three ideas to keep distinct</h3><p><b>Classify:</b> select Business Classification so the right label can be determined.</p><p><b>Close:</b> capture Date Closed when the business activity is finished.</p><p><b>Commence:</b> create and run Purview events so retention starts and an expiry date is calculated.</p><h3>Why this matters</h3><p>The design gives the customer the benefit of event-based retention from Date Closed, while still applying the label as early as practical for governance and auditability.</p><h3>Explore the tours</h3><p>Use the guided tours above to step through the happy path, historical backfill scenarios and the main operational controls.</p><p class="notice">This is an explanatory reference artifact based on the described implementation pattern. It is not a tenant diagnostic or a Microsoft-authored diagram.</p>`}
- document.querySelectorAll('[data-tour]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tour===tour)));requestAnimationFrame(draw);
 }
-function draw(){const svg=document.getElementById('lines');svg.innerHTML='<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" style="fill:var(--accent);stroke:none"/></marker></defs>';if(!selected||innerWidth<700)return;
- const box=map.getBoundingClientRect();svg.setAttribute('viewBox',`0 0 ${box.width} ${box.height}`);
- D.edges.filter(e=>tour?D.tours[tour].nodes.includes(e[0])&&D.tours[tour].nodes.includes(e[1]):e[0]===selected||e[1]===selected).forEach(([a,b,label])=>{if(byId[a].g===5||byId[b].g===5)return;const aa=document.getElementById('n-'+a).getBoundingClientRect(),bb=document.getElementById('n-'+b).getBoundingClientRect();let x1,y1,x2,y2,path;if(byId[a].g===byId[b].g){x1=aa.right-box.left;y1=aa.top+aa.height/2-box.top;x2=bb.right-box.left;y2=bb.top+bb.height/2-box.top;path=`M${x1},${y1} C${x1+8},${y1} ${x2+8},${y2} ${x2},${y2}`}else{const forward=aa.left<bb.left;x1=(forward?aa.right:aa.left)-box.left;x2=(forward?bb.left:bb.right)-box.left;y1=aa.top+aa.height/2-box.top;y2=bb.top+bb.height/2-box.top;const mid=(x1+x2)/2;path=`M${x1},${y1} C${mid},${y1} ${mid},${y2} ${x2},${y2}`}const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',path);p.setAttribute('marker-end','url(#arrow)');svg.appendChild(p)})}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-node]');if(b)choose(b.dataset.node);const t=e.target.closest('[data-tour]');if(t){tour=t.dataset.tour;step=0;choose(D.tours[tour].steps[0][0],true)}if(e.target.id==='next'){if(step===D.tours[tour].steps.length-1){tour=null;selected=null;render()}else{step++;choose(D.tours[tour].steps[step][0],true)}}if(e.target.id==='prev'){step--;choose(D.tours[tour].steps[step][0],true)}});
-document.getElementById('reset').onclick=()=>{selected=null;tour=null;document.getElementById('search').value='';render()};
-document.getElementById('compact').onclick=function(){document.body.classList.toggle('compact');this.setAttribute('aria-pressed',String(document.body.classList.contains('compact')));draw()};
-document.getElementById('theme').onclick=()=>{document.body.classList.toggle('dark');draw()};
-document.getElementById('print').onclick=()=>window.print();
-document.getElementById('search').addEventListener('input',render);
-addEventListener('resize',draw);render();
 </script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const byId = {};
+D.lanes.forEach(l=>l.steps.forEach(s=>{s.lane=l.id; s.color=l.color; byId[s.id]=s;}));
+let selected = null, tour = null, step = 0;
+const escape = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const thead = document.getElementById('thead');
+const lanesEl = document.getElementById('lanes');
+const detail = document.getElementById('detail');
+const searchEl = document.getElementById('search');
 
+thead.innerHTML = '<div class="phase-lbl">Timeline stages</div>' + D.columns.map(c=>`<div class="stephead"><span class="num">${escape(c.n)}</span><span class="ttl">${escape(c.title)}</span><span class="date">${escape(c.date)}</span></div>`).join('');
+
+function stepHTML(lane, stepObj){
+  const extra = (stepObj.col==='s5' || stepObj.id==='p4' || stepObj.id==='p6' || stepObj.id==='e5') ? ' wait' : ((stepObj.col==='s7' || stepObj.col==='s8') ? ' good' : '');
+  return `<button class="step${extra}" id="n-${stepObj.id}" data-node="${stepObj.id}" style="--lane:${lane.color}" aria-pressed="false"><b>${escape(stepObj.title)}</b><small>${escape(stepObj.sub)}</small><span class="tag">${escape(stepObj.kind)}</span></button>`;
+}
+
+D.lanes.forEach(lane=>{
+  const row = document.createElement('section');
+  row.className = 'band';
+  let cells = `<div class="lanehdr" style="--lane:${lane.color}"><i></i><div><strong>${escape(lane.title)}</strong><span>${escape(lane.sub)}</span></div></div>`;
+  D.columns.forEach(col=>{
+    const st = lane.steps.find(s=>s.col===col.id);
+    cells += st ? stepHTML(lane, st) : '<div></div>';
+  });
+  row.innerHTML = cells;
+  lanesEl.appendChild(row);
+});
+
+function linked(id){ const out = new Set([id]); (byId[id].links||[]).forEach(x=>out.add(x)); Object.values(byId).forEach(n=>{ if((n.links||[]).includes(id)) out.add(n.id); }); return out; }
+function choose(id, keepTour=false){ selected=id; if(!keepTour) tour=null; searchEl.value=''; render(); }
+function relationHTML(ids){ return ids.map(id=>`<button data-node="${id}">${escape(byId[id].title)} <span>· ${escape(byId[id].kind)}</span></button>`).join('') || '<span class="empty">No direct relationship shown.</span>'; }
+
+function render(){
+  const active = tour ? new Set(D.tours[tour].nodes) : selected ? linked(selected) : null;
+  const q = searchEl.value.toLowerCase().trim();
+  document.querySelectorAll('.step').forEach(el=>{
+    const n = byId[el.dataset.node];
+    const hay = JSON.stringify(n).toLowerCase();
+    const match = hay.includes(q);
+    el.classList.toggle('dim', q ? !match : active && !active.has(n.id));
+    el.classList.toggle('selected', n.id === selected);
+    el.setAttribute('aria-pressed', String(n.id===selected));
+    if(document.body.classList.contains('compact')) el.querySelector('small').style.display='none'; else el.querySelector('small').style.display='block';
+  });
+  let tourHTML = '';
+  if(tour){ const t = D.tours[tour], s = t.steps[step]; tourHTML = `<div class="tourbox"><div class="eyebrow">${escape(t.name)} · ${step+1}/${t.steps.length}</div><h2>${escape(s[1])}</h2><p>${escape(s[2])}</p><div class="tourctrl"><button id="prev" ${step===0?'disabled':''}>← Back</button><button id="next">${step===t.steps.length-1?'Finish':'Next →'}</button></div></div>`; }
+  if(selected){
+    const n = byId[selected];
+    detail.innerHTML = tourHTML + `<div class="eyebrow">${escape(n.kind)} · ${escape(D.columns.find(c=>c.id===n.col).title)}</div><h2>${escape(n.title)}</h2><p>${escape(n.sub)}</p><h3>How it works</h3><p>${escape(n.does)}</p><h3>Limits & dependencies</h3><p>${escape(n.limit)}</p><h3>Direct relationships</h3><div class="links">${relationHTML(n.links||[])}</div><h3>Evidence / things to check</h3><ul>${(n.evidence||[]).map(x=>`<li>${escape(x)}</li>`).join('')}</ul><h3>Why this step matters</h3><p>${n.col==='s5' ? 'This is the key explanatory point in the design: the item can have the right label and the right Date Closed value, but still not yet have a calculated expiry date.' : n.col==='s6' ? 'This is the operational bridge between the business close date and retention commencement.' : n.col==='s8' ? 'This is the proof point most customers find easiest to trust, because the calculated date is directly visible.' : 'This step helps explain the sequence of business action, system response and evidence.'}</p>`;
+  } else {
+    detail.innerHTML = `<div class="eyebrow">Reading the timeline</div><h2>Three-lane lifecycle view</h2><p>This visual explains the sequence from creation through classification, label application, closure, event processing and disposition review.</p><h3>What to notice first</h3><p><b>Lane 1</b> shows the business story. <b>Lane 2</b> shows the Purview system story. <b>Lane 3</b> shows the evidence and control story.</p><p><b>The yellow waiting stage is the key concept.</b> It shows the period after the event-based label has been applied but before a Purview event has started retention.</p><h3>Good ways to use this view</h3><p>Use it to explain the operating model to records managers, to support customer discussions, or to anchor representative test cases in your Test Plan.</p><h3>Suggested reading order</h3><p>Try the guided tours above, or click straight into the yellow waiting step and then the event-processing step.</p>`;
+  }
+  document.querySelectorAll('[data-tour]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.tour===tour)));
+}
+
+document.addEventListener('click', e=>{
+  const n = e.target.closest('[data-node]'); if(n) choose(n.dataset.node);
+  const t = e.target.closest('[data-tour]'); if(t){ tour=t.dataset.tour; step=0; choose(D.tours[tour].steps[0][0], true); }
+  if(e.target.id==='next'){ if(step===D.tours[tour].steps.length-1){tour=null; selected=null; render();} else { step++; choose(D.tours[tour].steps[step][0], true);} }
+  if(e.target.id==='prev'){ step--; choose(D.tours[tour].steps[step][0], true); }
+});
+
+document.getElementById('reset').onclick = ()=>{ selected=null; tour=null; searchEl.value=''; render(); };
+document.getElementById('theme').onclick = ()=> document.body.classList.toggle('dark');
+document.getElementById('compact').onclick = function(){ document.body.classList.toggle('compact'); this.setAttribute('aria-pressed', String(document.body.classList.contains('compact'))); render(); };
+document.getElementById('print').onclick = ()=> window.print();
+searchEl.addEventListener('input', ()=>{ tour=null; selected=null; render(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.getElementById('reset').click(); });
+render();
+</script>
 <footer class="foot">
-  <p><b>How you could use this artifact:</b> explain the operating model to stakeholders, support the narrative in your Test Plan, or use it as a workshop aid to distinguish between metadata-driven label application and event-driven retention commencement. If you want, this can be further tailored with your customer’s terminology, label counts, managed property names and test references.</p>
+  <p><b>Use of this artifact:</b> This version is deliberately timeline-centric so that stakeholders can see the difference between <i>classifying and labelling an item</i> and <i>actually commencing retention</i>. If you want, this can next be tailored with your customer’s exact terms, label names, managed property names, or even representative test IDs from the Test Plan.</p>
   <details>
-    <summary>Reference links used in this diagram</summary>
+    <summary>Reference links</summary>
     <ol id="sources"></ol>
   </details>
 </footer>
 <script>
-const list=document.getElementById('sources');Object.values(D.sources).forEach(s=>{const li=document.createElement('li');li.innerHTML=`<a href="${s.url}" target="_blank" rel="noopener">${s.title}</a>`;list.appendChild(li)});
+const srcList = document.getElementById('sources');
+Object.values(D.sources).forEach(s=>{ const li=document.createElement('li'); li.innerHTML=`<a href="${s.url}" target="_blank" rel="noopener">${s.title}</a>`; srcList.appendChild(li); });
 </script>
 </body>
 </html>
